@@ -1,33 +1,54 @@
 // --- Get Elements ---
 const ipTab = document.getElementById('tab-ip');
 const hashTab = document.getElementById('tab-hash');
+const newsTab = document.getElementById('tab-news');
 const checkBtn = document.getElementById('check-btn');
 const input = document.getElementById('indicator-input');
+const lookupForm = document.getElementById('lookup-form');
 const loading = document.getElementById('loading');
 const resultsContainer = document.getElementById('results-container');
 
 // --- State ---
-let currentMode = 'ip'; // 'ip' or 'hash'
+let currentMode = 'ip'; // 'ip', 'hash', or 'news'
 
 // --- Event Listeners ---
 ipTab.addEventListener('click', () => {
     currentMode = 'ip';
     ipTab.classList.add('active');
     hashTab.classList.remove('active');
+    newsTab.classList.remove('active');
     input.placeholder = 'Enter IP (e.g., 8.8.8.8)';
+    lookupForm.style.display = 'flex';
+    resultsContainer.innerHTML = '';
 });
 
 hashTab.addEventListener('click', () => {
     currentMode = 'hash';
     hashTab.classList.add('active');
     ipTab.classList.remove('active');
+    newsTab.classList.remove('active');
     input.placeholder = 'Enter SHA256, SHA1, or MD5 hash';
+    lookupForm.style.display = 'flex';
+    resultsContainer.innerHTML = '';
+});
+
+newsTab.addEventListener('click', () => {
+    currentMode = 'news';
+    newsTab.classList.add('active');
+    ipTab.classList.remove('active');
+    hashTab.classList.remove('active');
+    lookupForm.style.display = 'none';
+    resultsContainer.innerHTML = '';
+    fetchNews(); // Fetch news immediately
 });
 
 checkBtn.addEventListener('click', checkIndicator);
 
 // --- Main Function ---
 async function checkIndicator() {
+    // Only run if not in news mode
+    if (currentMode === 'news') return;
+
     const indicator = input.value.trim();
     if (!indicator) {
         alert("Please enter an indicator to check.");
@@ -53,9 +74,9 @@ async function checkIpReputation(ip) {
             body: JSON.stringify({ ip: ip })
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Unknown error');
-        
-        displayIpResults(data.data); 
+        if (!response.ok) throw new Error(data.error || 'Unknown IP check error');
+
+        displayIpResults(data.data); // AbuseIPDB data is nested
 
     } catch (error) {
         resultsContainer.innerHTML = `<p class="feedback incorrect">Error: ${error.message}</p>`;
@@ -79,9 +100,9 @@ async function checkHashReputation(hash) {
             return;
         }
 
-        if (!response.ok) throw new Error(data.error || 'Unknown error');
+        if (!response.ok) throw new Error(data.error || 'Unknown hash check error');
 
-        displayHashResults(data.data);
+        displayHashResults(data.data); // VirusTotal data is nested
 
     } catch (error) {
         resultsContainer.innerHTML = `<p class="feedback incorrect">Error: ${error.message}</p>`;
@@ -89,6 +110,29 @@ async function checkHashReputation(hash) {
         loading.style.display = 'none';
     }
 }
+
+// --- News Fetch Function ---
+async function fetchNews() {
+    loading.textContent = 'Fetching latest cyber news...'; // Update loading text
+    loading.style.display = 'block';
+    resultsContainer.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/cyber-news');
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || 'Could not fetch news');
+
+        displayNews(data);
+
+    } catch (error) {
+        resultsContainer.innerHTML = `<p class="feedback incorrect">Error: ${error.message}</p>`;
+    } finally {
+        loading.style.display = 'none';
+        loading.textContent = 'Analyzing...'; // Reset loading text
+    }
+}
+
 
 // --- Display Functions ---
 function displayIpResults(data) {
@@ -130,14 +174,12 @@ function displayHashResults(data) {
     const undetected = stats.undetected;
     const totalVendors = stats.harmless + stats.suspicious + stats.malicious + stats.undetected;
 
-    // --- THIS IS THE FIX ---
-    // The classes are now static. The color is tied to the category, not the number.
-    let maliciousClass = 'incorrect'; // Malicious is always red
-    let suspiciousClass = 'warn';     // Suspicious is always dark yellow
-    let harmlessClass = 'correct';    // Harmless is always green
-    // --- END OF FIX ---
+    // Static classes for categories
+    let maliciousClass = 'incorrect';
+    let suspiciousClass = 'warn';
+    let harmlessClass = 'correct';
 
-    // Overall result color (This logic is still correct)
+    // Overall result color
     let overallResultClass = 'correct';
     if (malicious > 0) {
         overallResultClass = 'incorrect';
@@ -145,12 +187,11 @@ function displayHashResults(data) {
         overallResultClass = 'warn';
     }
 
-    // Percentage text color (This logic is also correct)
+    // Percentage text color
     let vendorsFlaggedText = "vendors flagged this";
     let vendorsFlaggedTextClass = 'correct'; // Default green (0%)
     if (malicious > 0 || suspicious > 0) {
         const flaggedPercentage = ((malicious + suspicious) / totalVendors) * 100;
-        
         if (flaggedPercentage > 60) {
             vendorsFlaggedTextClass = 'incorrect'; // Red
         } else if (flaggedPercentage > 30) {
@@ -162,6 +203,16 @@ function displayHashResults(data) {
 
     const fileName = data.attributes.meaningful_name || (data.attributes.names && data.attributes.names[0]) || 'N/A';
     
+    // Function to safely format dates
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        try {
+            return new Date(timestamp * 1000).toLocaleString();
+        } catch (e) {
+            return 'Invalid Date';
+        }
+    };
+
     resultsContainer.innerHTML = `
         <h3>Report for Hash: <span class="hash-text">${data.id}</span></h3>
         <div class="report-grid">
@@ -197,11 +248,11 @@ function displayHashResults(data) {
             </div>
             <div class="report-item">
                 <strong>First Submission:</strong>
-                <span>${new Date(data.attributes.first_submission_date * 1000).toLocaleString() || 'N/A'}</span>
+                <span>${formatDate(data.attributes.first_submission_date)}</span>
             </div>
             <div class="report-item">
                 <strong>Last Analysis:</strong>
-                <span>${new Date(data.attributes.last_analysis_date * 1000).toLocaleString() || 'N/A'}</span>
+                <span>${formatDate(data.attributes.last_analysis_date)}</span>
             </div>
             <div class="report-item full-width">
                 <strong>SHA256:</strong>
@@ -214,3 +265,40 @@ function displayHashResults(data) {
         </div>
     `;
 }
+
+function displayNews(articles) {
+    if (!articles || articles.length === 0) {
+        resultsContainer.innerHTML = `<p class="feedback warn">Could not retrieve any news articles.</p>`;
+        return;
+    }
+
+    let newsHtml = '<ul class="news-list">';
+    
+    articles.forEach(article => {
+        let publishedDate = 'No date';
+        // Try parsing the date, handle potential errors
+        try {
+             if (article.published) {
+                 publishedDate = new Date(article.published).toLocaleString();
+             }
+        } catch (e) { 
+             console.error("Could not parse date:", article.published);
+        }
+
+        newsHtml += `
+            <li class="news-item">
+                <a href="${article.link}" target="_blank" rel="noopener noreferrer">
+                    <strong>${article.title || 'No Title'}</strong>
+                    <span>${publishedDate}</span>
+                </a>
+            </li>
+        `;
+    });
+
+    newsHtml += '</ul>';
+    resultsContainer.innerHTML = newsHtml;
+}
+
+// --- Initial Load ---
+// Optionally, load news when the page first loads
+// document.addEventListener('DOMContentLoaded', fetchNews);
