@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intel Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-wrapper">
+        <h1>Threat Intel</h1>
+        <h2>Reputation Check</h2>
+
+        <div class="tabs">
+            <button id="tab-ip" class="tab-btn active">Check IP</button>
+            <button id="tab-hash" class="tab-btn">Check File Hash</button>
+        </div>
+
+        <div id="lookup-form">
+            <input type="text" id="indicator-input" placeholder="Enter IP (e.g., 8.8.8.8)">
+            <button id="check-btn">Analyze</button>
+        </div>
+
+        <div id="loading" style="display: none;">Analyzing...</div>
+        
+        <div id="results-container"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
