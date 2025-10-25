@@ -272,11 +272,25 @@ function displayNews(articles) {
         return;
     }
 
+    // --- NEW: List of pixel art images ---
+    const pixelArtImages = [
+        'assets/pixel_art_1.png',
+        'assets/pixel_art_2.png',
+        'assets/pixel_art_3.png',
+        'assets/pixel_art_4.png',
+        'assets/pixel_art_5.png',
+        'assets/pixel_art_6.png',
+        'assets/pixel_art_7.png',
+        'assets/pixel_art_8.png',
+        'assets/pixel_art_9.png',
+        'assets/pixel_art_10.png'
+    ];
+    // --- END NEW ---
+
     let newsHtml = '<ul class="news-list">';
     
     articles.forEach(article => {
         let publishedDate = 'No date';
-        // Try parsing the date, handle potential errors
         try {
              if (article.published) {
                  publishedDate = new Date(article.published).toLocaleString();
@@ -285,11 +299,18 @@ function displayNews(articles) {
              console.error("Could not parse date:", article.published);
         }
 
+        // --- NEW: Randomly select a pixel art image ---
+        const randomImage = pixelArtImages[Math.floor(Math.random() * pixelArtImages.length)];
+        // --- END NEW ---
+
         newsHtml += `
             <li class="news-item">
                 <a href="${article.link}" target="_blank" rel="noopener noreferrer">
-                    <strong>${article.title || 'No Title'}</strong>
-                    <span>${publishedDate}</span>
+                    <div class="news-content-wrapper"> <div class="news-text">
+                            <strong>${article.title || 'No Title'}</strong>
+                            <span>${publishedDate}</span>
+                        </div>
+                        <img src="${randomImage}" alt="Pixel Art" class="news-pixel-art"> </div>
                 </a>
             </li>
         `;

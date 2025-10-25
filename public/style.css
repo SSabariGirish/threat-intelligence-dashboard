@@ -263,3 +263,45 @@ input:focus::after {
     .tabs { justify-content: space-around; }
     .tab-btn { padding: 10px 5px; font-size: 0.9em; }
 }
+
+/* --- NEW: News List Adjustments for Pixel Art --- */
+.news-item a {
+    /* Existing styles... */
+    display: block; /* Keep as block for clickable area */
+    /* Remove padding from here, it will go to news-content-wrapper */
+    padding: 0; /* No padding on the anchor directly */
+}
+
+.news-content-wrapper {
+    display: flex; /* Enable flexbox for side-by-side layout */
+    justify-content: space-between; /* Push content to ends */
+    align-items: center; /* Vertically center items */
+    padding: 15px; /* Apply padding here instead of the anchor */
+    gap: 10px; /* Space between text and image */
+}
+
+.news-text {
+    flex-grow: 1; /* Allow text to take up available space */
+    text-align: left;
+}
+
+.news-pixel-art {
+    width: 48px;  /* Adjust size of your pixel art */
+    height: 48px; /* Maintain aspect ratio */
+    flex-shrink: 0; /* Prevent image from shrinking */
+    image-rendering: pixelated; /* CRITICAL for crisp pixel art */
+    filter: drop-shadow(0 0 4px rgba(0, 255, 0, 0.4)); /* Green glow for pixel art */
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 480px) {
+    .news-content-wrapper {
+        flex-direction: column; /* Stack text and image vertically */
+        align-items: flex-start; /* Align text and image to the left */
+        gap: 5px;
+    }
+    .news-pixel-art {
+        align-self: flex-end; /* Push pixel art to the right when stacked */
+        margin-top: 10px; /* Space from text when stacked */
+    }
+}
