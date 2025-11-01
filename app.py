@@ -7,14 +7,11 @@ import feedparser # For RSS News Feed
 load_dotenv()
 app = Flask(__name__, static_folder='public', static_url_path='')
 
-# --- API KEYS ---
 ABUSEIPDB_KEY = os.environ.get("ABUSEIPDB_API_KEY")
 VIRUSTOTAL_KEY = os.environ.get("VIRUSTOTAL_API_KEY")
 
-# --- FEED URL ---
 NEWS_FEED_URL = "https://krebsonsecurity.com/feed/"
 
-# --- Frontend Routes ---
 @app.route('/')
 def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
@@ -23,7 +20,6 @@ def serve_index():
 def serve_static_files(path):
     return send_from_directory(app.static_folder, path)
 
-# --- API Route 1: IP CHECK ---
 @app.route('/api/check-ip', methods=['POST'])
 def check_ip():
     if not ABUSEIPDB_KEY:
@@ -53,7 +49,6 @@ def check_ip():
         print(f"Error checking IP: {e}")
         return jsonify({"error": str(e)}), 500
 
-# --- API Route 2: HASH CHECK ---
 @app.route('/api/check-hash', methods=['POST'])
 def check_hash():
     if not VIRUSTOTAL_KEY:
@@ -87,13 +82,12 @@ def check_hash():
         print(f"Error checking hash: {e}")
         return jsonify({"error": str(e)}), 500
 
-# --- API Route 3: CYBER NEWS ---
 @app.route('/api/cyber-news', methods=['GET'])
 def get_cyber_news():
     try:
         feed = feedparser.parse(NEWS_FEED_URL)
         articles = []
-        for entry in feed.entries[:20]: # Get top 20
+        for entry in feed.entries[:20]:
             articles.append({
                 'title': entry.title,
                 'link': entry.link,
